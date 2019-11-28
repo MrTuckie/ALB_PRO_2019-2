@@ -36,7 +36,7 @@
 #define DI0     26   // GPIO26 -- SX1278's IRQ(Interrupt Request)
 #define BAND    868E6
 #define LED     14   // Led da criança
-
+#define BAUD    115200
 
 
 const long frequency = 915E6;  // LoRa Frequency
@@ -45,8 +45,10 @@ const int csPin = 18;          // LoRa radio chip select
 const int resetPin = 14;        // LoRa radio reset
 const int irqPin = 26;          // change for your board; must be a hardware interrupt pin
 
+uint32_t  timestamp = 0;
+
 void setup() {
-  Serial.begin(115200);                   // initialize serial
+  Serial.begin(BAUD);                   // initialize serial
   while (!Serial);
   Serial.println("===============NODE===============");
   SPI.begin(SCK,MISO,MOSI,SS);
@@ -66,17 +68,21 @@ void setup() {
 
   LoRa.onReceive(onReceive);
   LoRa_rxMode();
+  timestamp = millis();
 }
 
 void loop() {
   if (runEvery(1000)) { // repeat every 1000 millis
 
-//    String message = "HeLoRa World! ";
-//    message += "I'm a Node! ";
-//    message += millis();
-  
     String message = "ON";
-    if (millis() < 6000) message = "OFF";
+    
+    if (millis() - timestamp > 6000){
+      message = "ON";
+      timestamp = millis();
+    }
+    else{
+      message = "OFF";
+    }
     LoRa_sendMessage(message); // send a message
 
     Serial.println("Send Message!");
